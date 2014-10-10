@@ -1,0 +1,24 @@
+#this is the class for master
+import sys
+import random
+
+
+class  Master(process):
+	def setup(n):
+		self.resp = {}
+	
+	def main():
+		if await(len(listof(p, received(('request',_), from_= p))) == n):
+			output("every client has a server:\n")
+			if len(resp)!=0:
+				for k, v in resp.items():
+					message = "process:  value: %i"%(v)
+					output(message)
+			
+	def recv(msg=('request',id), from_=p):
+		random.seed()
+		c = random.randint(0,50)
+		send(('reply',c), to = p)	
+		output("receive from %s\n"%(id))
+		resp[id] = c
+

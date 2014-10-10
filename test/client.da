@@ -1,0 +1,16 @@
+#this is the class for bank client
+import sys
+import random
+import time
+
+class Client(process):
+	def setup(m): pass
+	
+	def main():
+		random.seed()
+		n = random.randint(0,6)
+		time.sleep(n)
+		send(('request',self.id), to=m)
+		if await(some(received(('reply',_)))):
+			output("client %s done\n"%self.id)
+

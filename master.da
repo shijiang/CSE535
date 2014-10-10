@@ -1,5 +1,50 @@
 #this is the class for master
-import da
 import sys
+import random
+import time
 
+
+class  Master(process):
+	def setup(ps):
+		self.resp = {}
+		self.unresp = {}
+		self.timer = 1
+		self.lc = logical_clock()
+	
+	def main():
+		while True:
+			time.sleep(timer)
+			lc = logical_clock()
+			for chain in ps.keys():
+				for procList in ps[chain]:
+					for p in procList:
+						send(('ping',lc), to = p[0])
+						if await(some(received((('reply',lc),id), from_=proc), has=(p[0]==proc and lc>self.lc))):
+							pass
+						elif timeout(timer):
+							upresp[p[1]]+=1
+						if upresp[p[1]]>3:
+							procList.remove(p)
+							##send fail server message
+						resp[p[1]]=False
+			
+	def recv(msg=(('reply',lc),id), from_=p):
+		if (lc>self.lc):
+			resp[id] = True;
+			upresp[id] = 0;
+	
+	def recv(msg=(('newServer',chainNum),id), from_ =p):
+		send((('addServer',p),id), to = tail(chainNum))
+	
+	def recv(msg=(('done',chainNum), id), from_ = p):
+		ps[chainNum].append((p,id))
+		resp[id] = True
+		unresp[id] = 0
+	
+	def recv(msg=(('head',chainNum), id), from_ = p):
+		send(('replyHead',(ps[chainNum][:1],tail(chainNum))), to = p) 
+	
+	def tail(num):
+		return ps[num][-1:]
+	
 

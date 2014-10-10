@@ -1,0 +1,15 @@
+import sys
+import random
+from master import Master
+from client import Client
+
+def main():
+	nclients = random.randint(0,9)
+	print("total clients: %i\n"%(nclients))
+	config(channel='fifo')
+	master = new(Master, num = 1)
+	setup(master,[nclients])
+	clients = new(Client, num = nclients)
+	setup(clients,[master])
+	start(master)
+	start(clients)
