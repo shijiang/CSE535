@@ -4,9 +4,10 @@ import random
 import time
 
 class Client(process):
-	def setup(m,chainNum): 
-		self.head = Null
-		self.tail = Null
+	def setup(m,chainNum,accountNum): 
+		self.head = 0
+		self.tail = 0
+		self.lc = logical_clock()
 	
 	def main():
 		random.seed()
@@ -14,17 +15,24 @@ class Client(process):
 		time.sleep(n)
 
 		send((('head',chainNum),self.id),to = m)		
-		await(some(received(('replyHead',(h,t))), from_ = m))
+		await(some(received(('replyHead',(h,t)), from_ = m)))
 		
-		
-		send(('request',self.id), to=m)
-		if await(some(received(('reply',_)))):
-			output("client %s done\n"%self.id)
+		getBalance()
+		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,id)), from_ = t), has=(t==tail and (rlc,id)>(lc,id)))):
+			print(amount)
+		elif timeout(2):
+			print('query head')
 
-	def recv(msg=('replyHead',(h,t)), from_ = m):
+	def recv(msg=(('replyHead',),(h, t)), from_ = m):
 		head = h
 		tail = t
 
-	def getBalance()
-		send(('getBalance',), to = t)
+	def getBalance():
+		lc=logical_clock()
+		send((('getBalance',(accountNum,)),(lc, self.id)), to = tail)
+		
+	def deposit(amount):
+		lc=logical_clock()
+		send((('deposit',(accountNum,amount)),(lc,id)), to =head)
+		
 		

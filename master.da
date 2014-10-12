@@ -19,7 +19,7 @@ class  Master(process):
 				for procList in ps[chain]:
 					for p in procList:
 						send(('ping',lc), to = p[0])
-						if await(some(received((('reply',lc),id), from_=proc), has=(p[0]==proc and lc>self.lc))):
+						if await(some(received((('reply',),(lc,id)), from_=proc), has=(p[0]==proc and lc>self.lc))):
 							pass
 						elif timeout(timer):
 							upresp[p[1]]+=1
@@ -28,21 +28,21 @@ class  Master(process):
 							##send fail server message
 						resp[p[1]]=False
 			
-	def recv(msg=(('reply',lc),id), from_=p):
+	def recv(msg=(('reply',),(lc,id)), from_=p):
 		if (lc>self.lc):
 			resp[id] = True;
 			upresp[id] = 0;
 	
-	def recv(msg=(('newServer',chainNum),id), from_ =p):
-		send((('addServer',p),id), to = tail(chainNum))
+	def recv(msg=(('newServer',chainNum),(lc,id)), from_ =p):
+		send((('addServer',p),(lc,id)), to = tail(chainNum))
 	
-	def recv(msg=(('done',chainNum), id), from_ = p):
+	def recv(msg=(('done',chainNum),(lc, id)), from_ = p):
 		ps[chainNum].append((p,id))
 		resp[id] = True
 		unresp[id] = 0
 	
-	def recv(msg=(('head',chainNum), id), from_ = p):
-		send(('replyHead',(ps[chainNum][:1],tail(chainNum))), to = p) 
+	def recv(msg=(('head',chainNum),(lc, id)), from_ = p):
+		send((('replyHead',),(ps[chainNum][:1],tail(chainNum))), to = p) 
 	
 	def tail(num):
 		return ps[num][-1:]

@@ -1,0 +1,21 @@
+#this is the class for bank
+import sys
+
+class bank()
+	def __init__(self, accounts)
+		self.accounts = accounts
+		self.history = []
+	
+	def deposit(account)
+		accounts[account[0]] =+ account[1]
+		history.append(('deposit',(account[0],account[1])))
+		return accounts[account[0]]
+		
+	def withdraw(account)
+		accounts[account[0]] =-account[1]
+		history.append(('withdraw',(account[0],account[1])))
+		return accounts[account[0]]	
+		
+	def transfer(accounts)
+		print('transfer')
+	

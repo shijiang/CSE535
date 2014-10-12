@@ -1,13 +1,13 @@
 import da
-PatternExpr_0 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('reply'), da.pat.FreePattern('lc')]), da.pat.FreePattern('id')])
+PatternExpr_0 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('reply')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_1 = da.pat.FreePattern('proc')
-PatternExpr_3 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('reply'), da.pat.FreePattern('lc')]), da.pat.FreePattern('id')])
+PatternExpr_3 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('reply')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_4 = da.pat.FreePattern('p')
-PatternExpr_5 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('newServer'), da.pat.FreePattern('chainNum')]), da.pat.FreePattern('id')])
+PatternExpr_5 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('newServer'), da.pat.FreePattern('chainNum')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_6 = da.pat.FreePattern('p')
-PatternExpr_7 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('done'), da.pat.FreePattern('chainNum')]), da.pat.FreePattern('id')])
+PatternExpr_7 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('done'), da.pat.FreePattern('chainNum')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_8 = da.pat.FreePattern('p')
-PatternExpr_9 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('head'), da.pat.FreePattern('chainNum')]), da.pat.FreePattern('id')])
+PatternExpr_9 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('head'), da.pat.FreePattern('chainNum')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_10 = da.pat.FreePattern('p')
 import sys
 import random
@@ -34,12 +34,12 @@ class Master(da.DistProcess):
                 for procList in self.ps[chain]:
                     for p in procList:
                         self._send(('ping', self.lc), p[0])
-                        proc = id = lc = None
+                        id = lc = proc = None
 
                         def ExistentialOpExpr_0():
-                            nonlocal proc, id, lc
-                            for (_, (_, _, proc), ((_ConstantPattern14_, lc), id)) in self._MasterReceivedEvent_0:
-                                if (_ConstantPattern14_ == 'reply'):
+                            nonlocal id, lc, proc
+                            for (_, (_, _, proc), ((_ConstantPattern15_,), (lc, id))) in self._MasterReceivedEvent_0:
+                                if (_ConstantPattern15_ == 'reply'):
                                     if ((p[0] == proc) and (lc > self.lc)):
                                         return True
                             return False
@@ -75,28 +75,28 @@ class Master(da.DistProcess):
     def tail(self, num):
         return self.ps[num][(-1):]
 
-    def _Master_handler_0(self, p, lc, id):
+    def _Master_handler_0(self, lc, id, p):
         if (lc > self.lc):
             self.resp[id] = True
             upresp[id] = 0
     _Master_handler_0._labels = None
     _Master_handler_0._notlabels = None
 
-    def _Master_handler_1(self, id, chainNum, p):
-        self._send((('addServer', p), id), 
+    def _Master_handler_1(self, p, chainNum, id, lc):
+        self._send((('addServer', p), (lc, id)), 
         self.tail(chainNum))
     _Master_handler_1._labels = None
     _Master_handler_1._notlabels = None
 
-    def _Master_handler_2(self, id, chainNum, p):
+    def _Master_handler_2(self, chainNum, id, lc, p):
         self.ps[chainNum].append((p, id))
         self.resp[id] = True
         self.unresp[id] = 0
     _Master_handler_2._labels = None
     _Master_handler_2._notlabels = None
 
-    def _Master_handler_3(self, id, chainNum, p):
-        self._send(('replyHead', (self.ps[chainNum][:1], 
+    def _Master_handler_3(self, chainNum, id, lc, p):
+        self._send((('replyHead',), (self.ps[chainNum][:1], 
         self.tail(chainNum))), p)
     _Master_handler_3._labels = None
     _Master_handler_3._notlabels = None
