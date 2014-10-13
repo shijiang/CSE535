@@ -4,12 +4,17 @@ from master import Master
 from client import Client
 
 def main():
+	ps={}
 	nclients = random.randint(0,9)
 	print("total clients: %i\n"%(nclients))
-	config(channel='fifo')
+	config(channel='fifo',clock='Lamport')
 	master = new(Master, num = 1)
 	setup(master,[nclients])
 	clients = new(Client, num = nclients)
 	setup(clients,[master])
+	n=0
+	for client in clients:
+	    ps[client] = n
+	    n+=1
 	start(master)
 	start(clients)

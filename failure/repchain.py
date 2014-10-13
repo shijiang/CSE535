@@ -11,6 +11,7 @@ def main():
     config = configparser.ConfigParser()
     config.read('config')
     da.api.config(channel='fifo', clock='Lamport')
+    master = da.api.new(Master, num=1)
     banks = []
     accounts = {101: 300, 102: 4000, 103: 200, 104: 30000}
     bank1 = Bank(accounts)
@@ -24,24 +25,21 @@ def main():
     banks.append(bank2)
     banks.append(bank3)
     banks.append(bank4)
-    servers = da.api.new(Server, num=4)
-    n = 1
-    ps = {}
-    ps[1] = []
-    ps[2] = []
-    ps[3] = []
-    ps[4] = []
-    for server in servers:
-        ps[n].append(server)
-        n+=1
-    n = 1
-    for server in servers:
-        da.api.setup(server, [n, banks[(n - 1)], ps])
-        n+=1
     clients = da.api.new(Client, num=4)
     n = 1
     for client in clients:
-        da.api.setup(client, [ps[n][0], ((n * 100) + n)])
+        da.api.setup(client, [master, 1, (100 + n)])
         n+=1
-    da.api.start(servers)
+    n = 1
+    ps = {}
+    ps[1] = []
+    servers = da.api.new(Server, num=4)
+    for server in servers:
+        da.api.setup(server, [master, 1, banks[0], ps])
+        ps[1].append(server)
+        n+=1
+    print(ps[1])
+    da.api.setup(master, [1, ps])
     da.api.start(clients)
+    da.api.start(servers)
+    da.api.start(master)

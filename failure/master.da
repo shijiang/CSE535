@@ -19,14 +19,12 @@ class  Master(process):
 			for p in ps[k]:
 				resp[p] = True
 				unresp[p] = 0
-		
-		print(ps)
+
 		for k in ps.keys():
-			h = queryPid(head(k))
-			t = queryPid(tail(k))
-			ht[k] = (h,t)
+			h = head(k)
+			t = tail(k)
+			ht[k]=(h,t)
 		
-		print(ht)
 		while True:
 			time.sleep(timer)
 			for k in ps.keys():
@@ -47,14 +45,15 @@ class  Master(process):
 			resp[p] = True;
 			unresp[p] = 0;
 	
+	#not used in phase 2
 	def recv(msg=(('newServer',n),(lc,id)), from_ =p):
 		if (ps[n].count(p) == 0):
 			ps[n].append(p)
 			send((('addServer',p),(lc,id)), to = tail(n))
 			output('new server %s in the ps\n'%(id))
 		else:
-			output('server %s already in the ps\n'%(id))
-	
+			pass
+	#not used in phase 2
 	def recv(msg=(('done',n),(lc, id)), from_ = p):
 		ps[n].append(p)
 		(h,t) = ht[n]
@@ -65,34 +64,33 @@ class  Master(process):
 	def recv(msg=(('head',n),(lc, id)), from_ = p):
 		send((('replyHead',ht[n]),(lc,self.id)), to = p) 
 	
-	def recv(msg=(('neighbor', cn),(lc,id)),from_ = p):
+	def recv(msg=(('neighbor', cn),(tlc,tid)),from_ = p):
 		n = ps[cn].index(p)
 		if (n+1 < len(ps[cn])):
-			next = queryPid(ps[cn][n+1])
+			next = ps[cn][n+1]
 		else:
-			next=id
-		if (n-1>0):
-			prev = queryPid(ps[cn][n-1])
+			next=tid
+		if (n-1>=0):
+			prev = ps[cn][n-1]
 		else:
-			prev=id
+			prev=tid
 		lc=logical_clock()
 		send((('replyNeighbor',(prev,next)),(lc,self.id)),to = p)
 		output('reply to Neighbor')
 	
 	def tail(num):
 		n = len(ps[num])
-		return ps[num][-1:]
+		return ps[num][n-1]
 	
 	def head(num):
-		return ps[num][:1]
+		return ps[num][0]
 	
-	def recv(msg=(('replyPid',),(rlc,rid)), from_= p):
-		if (rid not in seenPid):
-			seenPid.append(rid)
 			
 	def queryPid(p):
 		lc = logical_clock()
 		send((('pid',),(lc,self.id)), to = p)
-		await(some(received((('replyPid',),(rlc,rid)), from_ = np)))
-		return seenPid[-1:]
+		if await(some(received((('replyPid',),(rlc,rid)), from_ = np), has=(rlc>self.lc))):
+			return rid
+		elif timeout(3):
+			output('pid fail\n')
 

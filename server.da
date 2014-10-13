@@ -1,2 +1,107 @@
 #this is the class for bank server
 import sys
+import random
+import time
+
+class Server(process):
+	def setup(chainNum,bank,ps):
+		self.sentHist = []
+		self.hist = []
+		self.next = 0
+		self.prev = 0
+		self.isHead = False
+		self.isTail = False
+		self.SN = 0
+		self.isWaitForProcessedTransfer = False
+		self.lc = logical_clock()
+		self.seenPid = []
+		
+	def main():
+		#read config for start up delay
+		random.seed()
+		n = random.randint(0,1)
+		#time.sleep(n)
+		while True:
+			await(some(received(('terminate',), from_ = m)))
+	
+	def recv(msg=(('ping',),(rlc,id)), from_ = m):
+		lc = logical_clock()
+		send((('reply',),(lc,self.id)), to = m)
+		
+	def recv(msg=(('getBalance',(accountNum,)),(lc, id)), from_ = p):
+			send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,id)), to = p)
+	
+	def recv(msg=(('deposit',(accountNum,amount)),(lc,id)), from_ = p):
+		if isHead:
+			if (((SN,'deposit'),(accountNum,amount)),(lc,id)) not in hist:
+				SN+=1
+				send((((SN,'deposit'),(accountNum,amount)),(lc,id)), to = next)
+				bank.deposit((accountNum,amount))
+			else:
+				send((((SN,'deposit'),(accountNum,amount)),(lc,id)), to = next)
+				
+	def recv(msg=(((SN,'deposit'),(accountNum,amount)),(lc,id)), from_ = p):
+		if SN>self.SN:
+			if not isWaitForProcessedTransfer:
+				if (((SN,'deposit'),(accountNum,amount)),(lc,id)) not in hist:
+					bank.deposit((accountNum,amount))					
+					sentHist.append((((SN,'deposit'),(accountNum,amount)),(lc,id)))
+					if isTail:
+						send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,id)), to = p)
+						sentHist.remove((((SN,'deposit'),(accountNum,amount)),(lc,id)))
+						hist.append((((SN,'deposit'),(accountNum,amount)),(lc,id)))
+						lc = logical_clock()
+						send((('ack',(((SN,'deposit'),(accountNum,amount)),(lc,id))),(lc,self.id)), to = prev)
+					else:
+						send((((SN,'deposit'),(accountNum,amount)),(lc,id)), to = next)
+			else:
+				if isTail:
+					send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,id)), to = p)
+				else:
+					send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,id)), to = next)
+					
+	def recv(msg=(('ack', m),(lc,self.id)), from_ = p):
+		sentHist.remove(m)
+		hist.append(m)
+		send((('ack', m),(lc,self.id)), to = prev)
+
+	def recv(msg=(('addServer',p),(lc,id)), from_ = m):
+		send(('hist',), to = p)
+			
+	def recv(msg=('hist',), from_ = p):
+		#self.bank = bank
+		#self.hist = hist
+		isTail = True
+		isWaitForProcessedTransfer = True
+		send(('done',), to = p)
+	
+	def recv(msg=('done',), from_ = p):
+		isTail = False
+		#implement sent in tail when adding new server
+	
+	def recv(msg=(('queryTail',),(rlc,rid)), from_ = client):
+		lc = logical_clock()
+		output('reply querytail\n')
+		send((('replyTail',ps[chainNum][-1:]),(lc,self.id)), to = client)
+		
+	def recv(msg=(('replyNeighbor',(prev,next)),(lc,id)), from_ = m):
+		self.next = next
+		self.prev = prev
+		if (self.next== self.id):
+			isTail = True;
+			output('im tail\n')
+		if (self.prev==self.id):
+			isHead=True
+			output('im head\n')	
+
+	def queryPid(p):
+		lc = logical_clock()
+		send((('pid',),(lc,self.id)), to = p)
+		await(some(received((('replyPid',),(rlc,rid)), from_ = np)))
+		return seenPid[-1:]
+		
+	def recv(msg=(('replyPid',),(rlc,rid)), from_= p):
+		if (rid not in seenPid):
+			seenPid.append(rid)		
+#need to process finished message 
+			

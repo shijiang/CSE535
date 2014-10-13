@@ -1,0 +1,19 @@
+[master]
+master = 1
+chainNum = 3
+ServersInChain = 4
+
+[bank]
+bank = 2
+
+[bank1]
+accountNum
+account1 = 101
+amount1 = 300
+account2 = 102
+amount2 = 400
+account3 = 103
+amount3 = 500
+
+[client]
+acct1 = 102

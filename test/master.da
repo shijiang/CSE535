@@ -8,17 +8,20 @@ class  Master(process):
 		self.resp = {}
 	
 	def main():
-		if await(len(listof(p, received(('request',_), from_= p))) == n):
+		if await(len(listof(p, received(('request',id), from_= p))) == n):
 			output("every client has a server:\n")
 			if len(resp)!=0:
 				for k, v in resp.items():
-					message = "process:  value: %i"%(v)
-					output(message)
+				    message = "process:  value: %i"%(v)
+				    output(message)
 			
-	def recv(msg=('request',id), from_=p):
+	def recv(msg=('request',(rlc,rid)), from_=p):
 		random.seed()
 		c = random.randint(0,50)
-		send(('reply',c), to = p)	
-		output("receive from %s\n"%(id))
-		resp[id] = c
+		k=p
+		lc = logical_clock()
+		print('master%i\n'%lc)
+		send(('reply',(rlc,rid)), to = rid)	
+		output("receive from %s\n"%(rid))
+		resp[rid] = c
 

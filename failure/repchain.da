@@ -8,9 +8,11 @@ from bank import Bank
 
 
 def main():
-	config = configparser.ConfigParser()
-	config.read("config")
-	config(channel='fifo',clock='Lamport')
+	configFile = configparser.ConfigParser()
+	configFile.read("config")
+	config(channel='fifo', clock='Lamport')
+
+	master = new(Master, num =1)
 	
 	banks=[]
 	accounts = {101:300,102:4000,103:200,104:30000}
@@ -25,35 +27,29 @@ def main():
 	banks.append(bank2)
 	banks.append(bank3)
 	banks.append(bank4)
-
-	servers = new(Server, num = 4)
-
-	n = 1	
-	ps={}
-	ps[1]=[]
-	ps[2]=[]
-	ps[3]=[]
-	ps[4]=[]		
 	
-	for server in servers:
-		ps[n].append(server)
-		n+=1
-		
-	n = 1
-	for server in servers:
-		setup(server,[n,banks[n-1],ps])
-		n+=1
-
-
 	clients = new(Client, num = 4)
-	
 	n = 1
 	for client in clients:
-		setup(client,[ps[n][0],n*100+n])
+		setup(client,[master,1,100+n])
 		n+=1
-		
-	start(servers)	
-	start(clients)
+	
+	n = 1
+	ps={}
+	ps[1]=[]
+	servers = new(Server, num = 4)
+			
+	for server in servers:
+		setup(server,[master,1,banks[0],ps])
+		ps[1].append(server)
+		n+=1
 
+	print(ps[1])
+	
+	setup(master, [1,ps])
+	
+	start(clients)
+	start(servers)
+	start(master)
 	
 	

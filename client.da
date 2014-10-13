@@ -4,28 +4,27 @@ import random
 import time
 
 class Client(process):
-	def setup(m,chainNum,accountNum): 
-		self.head = 0
+	def setup(head,accountNum):
 		self.tail = 0
 		self.lc = logical_clock()
 	
 	def main():
 		random.seed()
-		n = random.randint(0,6)
+		n = random.randint(5,10)
 		time.sleep(n)
+		output('query the tail\n')
+		lc = logical_clock()
+		send((('queryTail',),(lc,self.id)),to = head)
+		await(some(received((('replyTail',t),(rlc,rid)), from_ = m)))
 
-		send((('head',chainNum),self.id),to = m)		
-		await(some(received(('replyHead',(h,t)), from_ = m)))
-		
 		getBalance()
-		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,id)), from_ = t), has=(t==tail and (rlc,id)>(lc,id)))):
-			print(amount)
-		elif timeout(2):
-			print('query head')
+		output('client query the balance')
+		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t))):
+			output('the amount is %s\n'%amount)
 
-	def recv(msg=(('replyHead',),(h, t)), from_ = m):
-		head = h
+	def recv(msg=(('replyTail',t),(rlc,rid)), from_ = m):
 		tail = t
+		output('I got the tail %s\n'%(head))
 
 	def getBalance():
 		lc=logical_clock()

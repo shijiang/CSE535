@@ -1,0 +1,10 @@
+[master]
+master = 1
+chainNum = 3
+ServersInChain = 3
+
+[server]
+bank = 3
+
+[client]
+acct1 = 102

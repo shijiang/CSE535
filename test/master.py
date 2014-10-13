@@ -1,7 +1,7 @@
 import da
-PatternExpr_0 = da.pat.TuplePattern([da.pat.ConstantPattern('request'), da.pat.FreePattern(None)])
+PatternExpr_0 = da.pat.TuplePattern([da.pat.ConstantPattern('request'), da.pat.FreePattern('id')])
 PatternExpr_1 = da.pat.FreePattern('p')
-PatternExpr_3 = da.pat.TuplePattern([da.pat.ConstantPattern('request'), da.pat.FreePattern('id')])
+PatternExpr_3 = da.pat.TuplePattern([da.pat.ConstantPattern('request'), da.pat.TuplePattern([da.pat.FreePattern('rlc'), da.pat.FreePattern('rid')])])
 PatternExpr_4 = da.pat.FreePattern('p')
 import sys
 import random
@@ -20,7 +20,7 @@ class Master(da.DistProcess):
         _st_label_8 = 0
         while (_st_label_8 == 0):
             _st_label_8+=1
-            if (len([p for (_, (_, _, p), (_ConstantPattern11_, _)) in self._MasterReceivedEvent_0 if (_ConstantPattern11_ == 'request')]) == self.n):
+            if (len([p for (_, (_, _, p), (_ConstantPattern11_, id)) in self._MasterReceivedEvent_0 if (_ConstantPattern11_ == 'request')]) == self.n):
                 self.output('every client has a server:\n')
                 if (not (len(self.resp) == 0)):
                     for (k, v) in self.resp.items():
@@ -35,12 +35,14 @@ class Master(da.DistProcess):
         self.n = n
         self.resp = {}
 
-    def _Master_handler_0(self, id, p):
+    def _Master_handler_0(self, rid, rlc, p):
         random.seed()
         c = random.randint(0, 50)
-        self._send(('reply', c), p)
-        self.output(('receive from %s\n' % id))
-        self.resp[
-        p.getId()] = c
+        k = p
+        lc = self.logical_clock()
+        print(('master%i\n' % lc))
+        self._send(('reply', (rlc, rid)), rid)
+        self.output(('receive from %s\n' % rid))
+        self.resp[rid] = c
     _Master_handler_0._labels = None
     _Master_handler_0._notlabels = None

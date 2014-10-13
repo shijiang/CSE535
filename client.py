@@ -1,9 +1,9 @@
 import da
-PatternExpr_0 = da.pat.TuplePattern([da.pat.ConstantPattern('replyHead'), da.pat.TuplePattern([da.pat.FreePattern('h'), da.pat.FreePattern('t')])])
+PatternExpr_0 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('replyTail'), da.pat.FreePattern('t')]), da.pat.TuplePattern([da.pat.FreePattern('rlc'), da.pat.FreePattern('rid')])])
 PatternExpr_1 = da.pat.FreePattern('m')
-PatternExpr_3 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('getBalanceRep'), da.pat.TuplePattern([da.pat.FreePattern('acc'), da.pat.FreePattern('amount')])]), da.pat.TuplePattern([da.pat.FreePattern('rlc'), da.pat.FreePattern('id')])])
+PatternExpr_3 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('getBalanceRep'), da.pat.TuplePattern([da.pat.FreePattern('acc'), da.pat.FreePattern('amount')])]), da.pat.TuplePattern([da.pat.FreePattern('rlc'), da.pat.FreePattern('rid')])])
 PatternExpr_4 = da.pat.FreePattern('t')
-PatternExpr_6 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('replyHead')]), da.pat.TuplePattern([da.pat.FreePattern('h'), da.pat.FreePattern('t')])])
+PatternExpr_6 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('replyTail'), da.pat.FreePattern('t')]), da.pat.TuplePattern([da.pat.FreePattern('rlc'), da.pat.FreePattern('rid')])])
 PatternExpr_7 = da.pat.FreePattern('m')
 import sys
 import random
@@ -23,55 +23,52 @@ class Client(da.DistProcess):
 
     def main(self):
         random.seed()
-        n = random.randint(0, 6)
+        n = random.randint(5, 10)
         time.sleep(n)
-        self._send((('head', self.chainNum), self.id), self.m)
-        m = t = h = None
+        self.output('query the tail\n')
+        self.lc = self.logical_clock()
+        self._send((('queryTail',), (self.lc, self.id)), self.head)
+        m = t = rid = rlc = None
 
         def ExistentialOpExpr_0():
-            nonlocal m, t, h
-            for (_, (_, _, m), (_ConstantPattern13_, (h, t))) in self._ClientReceivedEvent_0:
-                if (_ConstantPattern13_ == 'replyHead'):
+            nonlocal m, t, rid, rlc
+            for (_, (_, _, m), ((_ConstantPattern16_, t), (rlc, rid))) in self._ClientReceivedEvent_0:
+                if (_ConstantPattern16_ == 'replyTail'):
                     if True:
                         return True
             return False
-        _st_label_15 = 0
-        while (_st_label_15 == 0):
-            _st_label_15+=1
+        _st_label_16 = 0
+        while (_st_label_16 == 0):
+            _st_label_16+=1
             if ExistentialOpExpr_0():
-                _st_label_15+=1
+                _st_label_16+=1
             else:
-                super()._label('_st_label_15', block=True)
-                _st_label_15-=1
+                super()._label('_st_label_16', block=True)
+                _st_label_16-=1
         self.getBalance()
-        rlc = t = amount = id = acc = None
+        self.output('client query the balance')
+        amount = acc = rlc = t = rid = None
 
         def ExistentialOpExpr_1():
-            nonlocal rlc, t, amount, id, acc
-            for (_, (_, _, t), ((_ConstantPattern35_, (acc, amount)), (rlc, id))) in self._ClientReceivedEvent_1:
-                if (_ConstantPattern35_ == 'getBalanceRep'):
-                    if ((t == self.tail) and ((rlc, id) > (self.lc, id))):
+            nonlocal amount, acc, rlc, t, rid
+            for (_, (_, _, t), ((_ConstantPattern39_, (acc, amount)), (rlc, rid))) in self._ClientReceivedEvent_1:
+                if (_ConstantPattern39_ == 'getBalanceRep'):
+                    if True:
                         return True
             return False
-        _st_label_17 = 0
-        self._timer_start()
-        while (_st_label_17 == 0):
-            _st_label_17+=1
+        _st_label_19 = 0
+        while (_st_label_19 == 0):
+            _st_label_19+=1
             if ExistentialOpExpr_1():
-                print(amount)
-                _st_label_17+=1
-            elif self._timer_expired:
-                print('query head')
-                _st_label_17+=1
+                self.output(('the amount is %s\n' % amount))
+                _st_label_19+=1
             else:
-                super()._label('_st_label_17', block=True, timeout=2)
-                _st_label_17-=1
+                super()._label('_st_label_19', block=True)
+                _st_label_19-=1
 
-    def setup(self, m, chainNum, accountNum):
-        self.chainNum = chainNum
-        self.m = m
+    def setup(self, head, accountNum):
         self.accountNum = accountNum
-        self.head = 0
+        self.head = head
         self.tail = 0
         self.lc = self.logical_clock()
 
@@ -83,8 +80,8 @@ class Client(da.DistProcess):
         self.lc = self.logical_clock()
         self._send((('deposit', (self.accountNum, amount)), (self.lc, id)), self.head)
 
-    def _Client_handler_0(self, t, h, m):
-        self.head = h
+    def _Client_handler_0(self, m, t, rid, rlc):
         self.tail = t
+        self.output(('I got the tail %s\n' % self.head))
     _Client_handler_0._labels = None
     _Client_handler_0._notlabels = None

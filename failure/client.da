@@ -1,0 +1,43 @@
+#this is the class for bank client
+import sys
+import random
+import time
+
+class Client(process):
+	def setup(m,chainNum,accountNum): 
+		self.head = 0
+		self.tail = 0
+		self.lc = logical_clock()
+	
+	def main():
+		random.seed()
+		n = random.randint(5,10)
+		time.sleep(n)
+		lc = logical_clock()
+		send((('head',chainNum),(lc,self.id)),to = m)	
+		output('client query the head\n')	
+		await(some(received((('replyHead',(h,t)),(rlc,id)), from_ = m)))
+		getBalance()
+		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t))):
+			output('%s has amount of %s\n'%(acc,amount))		
+		deposit(400)
+		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+			output('the new amount is %s\n'%amount)
+		deposit(-300)
+		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+			output('the new amount is %s\n'%amount)
+		
+	def recv(msg=(('replyHead',(h,t)),(rlc,rid)), from_ = m):
+		head = h
+		tail = t
+		output('I got the head %s\n'%(head))
+
+	def getBalance():
+		lc=logical_clock()
+		send((('getBalance',(accountNum,)),(lc, self.id)), to = tail)
+		
+	def deposit(amount):
+		lc=logical_clock()
+		send((('deposit',(accountNum,amount)),(lc,self.id)), to =head)
+		
+		
