@@ -16,6 +16,9 @@ class Bank():
 		self.accounts[account] -= amount
 		return self.accounts[account]	
 		
+	def createAcc(self, account, amount):
+		self.accounts[account] = amount
+		
 	def transfer(accounts):
 		print('transfer')
 	

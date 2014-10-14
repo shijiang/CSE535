@@ -1,19 +1,48 @@
 [master]
-master = 1
+masterNum = 1
 chainNum = 3
-ServersInChain = 4
 
 [bank]
-bank = 2
+bank = boa chase city
 
 [bank1]
-accountNum
-account1 = 101
-amount1 = 300
-account2 = 102
-amount2 = 400
-account3 = 103
-amount3 = 500
+accountNum = 3
+account = 101 102 103
+amount = 300 400 500
 
-[client]
-acct1 = 102
+[bank2]
+accountNum = 4
+account = 201 202 203 204
+amount = 300 400 300 200
+
+[bank3]
+accountNum = 1
+account = 301
+amount = 10000
+
+[chain1]
+bank = boa
+servers = 3
+
+[chain2]
+bank = chase
+servers = 4
+
+[chain3]
+bank = city
+servers = 3
+
+[clients]
+waitingTime = 5
+resending = no
+number = 6
+acc	= 102 101 301 201 202 204
+chains = boa boa city chase chase chase
+seeds = 1 2 3 4 5 6
+numReq = 4 5 6 3 4 1
+probGetBalance = 0.1 0.1 0.2 0.3 0.4 0.5
+probDeposit = 0.8 0.7 0.8 0.2 0.4 0.5
+probTransfer = 0.1 0.2 0.0 0.5 0.2 0.0
+
+[clientsSequence]
+client1 = 

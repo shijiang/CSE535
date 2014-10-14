@@ -8,38 +8,61 @@ from server import Server
 from bank import Bank
 
 def main():
-    config = configparser.ConfigParser()
-    config.read('config')
+    conf = configparser.ConfigParser()
+    conf.read('config')
     da.api.config(channel='fifo', clock='Lamport')
-    master = da.api.new(Master, num=1)
-    banks = []
-    accounts = {101: 300, 102: 4000, 103: 200, 104: 30000}
-    bank1 = Bank(accounts)
-    accounts = {201: 300, 202: 4000, 203: 200, 204: 30000}
-    bank2 = Bank(accounts)
-    accounts = {301: 300, 302: 4000, 303: 200, 304: 30000}
-    bank3 = Bank(accounts)
-    accounts = {401: 300, 402: 4000, 403: 200, 404: 30000}
-    bank4 = Bank(accounts)
-    banks.append(bank1)
-    banks.append(bank2)
-    banks.append(bank3)
-    banks.append(bank4)
-    clients = da.api.new(Client, num=4)
-    n = 1
-    for client in clients:
-        da.api.setup(client, [master, 1, (100 + n)])
-        n+=1
-    n = 1
+    master = da.api.new(Master, num=int(conf['master']['masterNum']))
+    chainNum = int(conf['master']['chainNum'])
     ps = {}
-    ps[1] = []
-    servers = da.api.new(Server, num=4)
-    for server in servers:
-        da.api.setup(server, [master, 1, banks[0], ps])
-        ps[1].append(server)
+    banks = {}
+    bankNames = conf['bank']['bank'].split()
+    bankNum = len(bankNames)
+    for n in range(1, (bankNum + 1)):
+        accounts = {}
+        prep = ('bank' + str(n))
+        accNum = int(conf[prep]['accountNum'])
+        accList = conf[prep]['account'].split()
+        amountList = conf[prep]['amount'].split()
+        for k in range(1, (accNum + 1)):
+            accounts[
+            int(accList[(k - 1)])] = int(amountList[(k - 1)])
+        bank = Bank(accounts)
+        banks[bankNames[(n - 1)]] = bank
+    servers = set()
+    for n in range(1, (chainNum + 1)):
+        prep = ('chain' + str(n))
+        serverNum = int(conf[prep]['servers'])
+        servBank = conf[prep]['bank']
+        ss = da.api.new(Server, num=serverNum)
+        servers = (servers | ss)
+        ps[servBank] = []
+        for s in ss:
+            da.api.setup(s, [master, servBank, banks[servBank]])
+            ps[servBank].append(s)
+    clientNum = int(conf['clients']['number'])
+    accList = conf['clients']['acc'].split()
+    belongsTo = conf['clients']['chains'].split()
+    seedList = conf['clients']['seeds'].split()
+    numReqList = conf['clients']['numReq'].split()
+    probGetBalanceList = conf['clients']['probGetBalance'].split()
+    probDepositList = conf['clients']['probDeposit'].split()
+    probTransferList = conf['clients']['probTransfer'].split()
+    clients = da.api.new(Client, num=clientNum)
+    n = 0
+    for c in clients:
+        da.api.setup(c, [master, belongsTo[n], 
+        int(accList[n]), 
+        int(seedList[n]), 
+        int(numReqList[n]), (
+        float(probGetBalanceList[n]), 
+        float(probDepositList[n]), 
+        float(probTransferList[n]))])
         n+=1
-    print(ps[1])
-    da.api.setup(master, [1, ps])
+    print(clients)
+    print('\n\n')
+    print(ps)
+    print('\n\n')
+    da.api.setup(master, [ps])
     da.api.start(clients)
     da.api.start(servers)
     da.api.start(master)

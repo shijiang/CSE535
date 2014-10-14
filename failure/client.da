@@ -4,33 +4,54 @@ import random
 import time
 
 class Client(process):
-	def setup(m,chainNum,accountNum): 
+	def setup(m,bankName,accountNum,seed,numReq,probs): 
 		self.head = 0
 		self.tail = 0
 		self.lc = logical_clock()
+		self.pmax = 5
+		self.nmax = -500
+		self.waitingTime = 10
+		self.retrans = True
 	
 	def main():
-		random.seed()
+		random.seed(seed)
 		n = random.randint(5,10)
 		time.sleep(n)
-		lc = logical_clock()
-		send((('head',chainNum),(lc,self.id)),to = m)	
-		output('client query the head\n')	
-		await(some(received((('replyHead',(h,t)),(rlc,id)), from_ = m)))
-		getBalance()
-		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t))):
-			output('%s has amount of %s\n'%(acc,amount))		
-		deposit(400)
-		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
-			output('the new amount is %s\n'%amount)
-		deposit(-300)
-		if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
-			output('the new amount is %s\n'%amount)
+		retrans= True
+		while retrans:
+			lc = logical_clock()
+			send((('head',bankName),(lc,self.id)),to = m)	
+			output('client %i query the head for %s\n'%(accountNum,bankName))	
+			if await(some(received((('replyHead',(h,t)),(rlc,id)), from_ = m), has=(rlc>lc))):
+				retrans = False
+			elif timeout(waitingTime):
+				pass
+				
+		while (numReq>0):
+			r = random.random()
+			if (r<probs[0]):			
+				getBalance()
+				if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+					output('%s has amount of %s\n'%(acc,amount))
+				elif timeout(waitingTime):
+					output('get balance timeout\n')
+			elif (r>probs[0] and r < probs[0]+probs[1]):
+				amount = random.randint(nmax,pmax)					
+				deposit(amount)
+				if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+					output('%s has new amount is %s\n'%(acc,amount))
+				elif some(received((('insuff',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
+					output('%s withdraw insufficient amount of %s\n'%(acc,amount))
+				elif timeout(waitingTime*10):
+					output('deposit timeout\n')
+			else:
+				output('%s transfer\n'%(accountNum))
+			numReq-=1
 		
 	def recv(msg=(('replyHead',(h,t)),(rlc,rid)), from_ = m):
 		head = h
 		tail = t
-		output('I got the head %s\n'%(head))
+		output('client %s got the head %s\n'%(accountNum,head))
 
 	def getBalance():
 		lc=logical_clock()

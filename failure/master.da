@@ -5,13 +5,15 @@ import time
 
 
 class  Master(process):
-	def setup(chainNum,ps):
+	def setup(ps):
 		self.resp = {}
 		self.unresp = {}
 		self.timer = 4
 		self.lc = logical_clock()
 		self.ht = {}
 		self.seenPid = []
+		self.chainNum = len(ps.keys())
+		self.probDrop = 0.2
 	
 	def main():
 		output("master starts\n")
@@ -61,8 +63,11 @@ class  Master(process):
 		resp[id] = True
 		unresp[id] = 0
 	
-	def recv(msg=(('head',n),(lc, id)), from_ = p):
-		send((('replyHead',ht[n]),(lc,self.id)), to = p) 
+	def recv(msg=(('head',n),(tlc, tid)), from_ = p):
+		r = random.random()
+		if (r>probDrop):
+			lc=logical_clock()
+			send((('replyHead',ht[n]),(lc,self.id)), to = p)
 	
 	def recv(msg=(('neighbor', cn),(tlc,tid)),from_ = p):
 		n = ps[cn].index(p)

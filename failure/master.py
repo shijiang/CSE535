@@ -7,7 +7,7 @@ PatternExpr_5 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern
 PatternExpr_6 = da.pat.FreePattern('p')
 PatternExpr_7 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('done'), da.pat.FreePattern('n')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
 PatternExpr_8 = da.pat.FreePattern('p')
-PatternExpr_9 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('head'), da.pat.FreePattern('n')]), da.pat.TuplePattern([da.pat.FreePattern('lc'), da.pat.FreePattern('id')])])
+PatternExpr_9 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('head'), da.pat.FreePattern('n')]), da.pat.TuplePattern([da.pat.FreePattern('tlc'), da.pat.FreePattern('tid')])])
 PatternExpr_10 = da.pat.FreePattern('p')
 PatternExpr_11 = da.pat.TuplePattern([da.pat.TuplePattern([da.pat.ConstantPattern('neighbor'), da.pat.FreePattern('cn')]), da.pat.TuplePattern([da.pat.FreePattern('tlc'), da.pat.FreePattern('tid')])])
 PatternExpr_12 = da.pat.FreePattern('p')
@@ -49,39 +49,38 @@ class Master(da.DistProcess):
                 for p in self.ps[k]:
                     self.lc = self.logical_clock()
                     self._send((('ping',), (self.lc, self.id)), p)
-                    id = lc = repServ = None
+                    repServ = id = lc = None
 
                     def ExistentialOpExpr_0():
-                        nonlocal id, lc, repServ
+                        nonlocal repServ, id, lc
                         for (_, (_, _, repServ), ((_ConstantPattern15_,), (lc, id))) in self._MasterReceivedEvent_0:
                             if (_ConstantPattern15_ == 'reply'):
                                 if ((p == repServ) and (lc > self.lc)):
                                     return True
                         return False
-                    _st_label_29 = 0
+                    _st_label_31 = 0
                     self._timer_start()
-                    while (_st_label_29 == 0):
-                        _st_label_29+=1
+                    while (_st_label_31 == 0):
+                        _st_label_31+=1
                         if ExistentialOpExpr_0():
                             pass
-                            _st_label_29+=1
+                            _st_label_31+=1
                         elif self._timer_expired:
                             self.unresp[p]+=1
-                            _st_label_29+=1
+                            _st_label_31+=1
                         else:
-                            super()._label('_st_label_29', block=True, timeout=self.timer)
-                            _st_label_29-=1
+                            super()._label('_st_label_31', block=True, timeout=self.timer)
+                            _st_label_31-=1
                     else:
-                        if (_st_label_29 != 2):
+                        if (_st_label_31 != 2):
                             continue
-                    if (_st_label_29 != 2):
+                    if (_st_label_31 != 2):
                         break
                     if (self.unresp[p] > 3):
                         self.ps[self.chainNum].remove(p)
                     self.resp[p] = False
 
-    def setup(self, chainNum, ps):
-        self.chainNum = chainNum
+    def setup(self, ps):
         self.ps = ps
         self.resp = {}
         self.unresp = {}
@@ -89,6 +88,8 @@ class Master(da.DistProcess):
         self.lc = self.logical_clock()
         self.ht = {}
         self.seenPid = []
+        self.chainNum = len(ps.keys())
+        self.probDrop = 0.2
 
     def tail(self, num):
         n = len(self.ps[num])
@@ -109,21 +110,21 @@ class Master(da.DistProcess):
                     if (rlc > self.lc):
                         return True
             return False
-        _st_label_72 = 0
+        _st_label_77 = 0
         self._timer_start()
-        while (_st_label_72 == 0):
-            _st_label_72+=1
+        while (_st_label_77 == 0):
+            _st_label_77+=1
             if ExistentialOpExpr_1():
                 return rid
-                _st_label_72+=1
+                _st_label_77+=1
             elif self._timer_expired:
                 self.output('pid fail\n')
-                _st_label_72+=1
+                _st_label_77+=1
             else:
-                super()._label('_st_label_72', block=True, timeout=3)
-                _st_label_72-=1
+                super()._label('_st_label_77', block=True, timeout=3)
+                _st_label_77-=1
 
-    def _Master_handler_0(self, id, lc, p):
+    def _Master_handler_0(self, p, id, lc):
         if (lc > self.lc):
             self.resp[p] = True
             self.unresp[p] = 0
@@ -141,7 +142,7 @@ class Master(da.DistProcess):
     _Master_handler_1._labels = None
     _Master_handler_1._notlabels = None
 
-    def _Master_handler_2(self, lc, n, p, id):
+    def _Master_handler_2(self, n, id, lc, p):
         self.ps[n].append(p)
         (h, t) = self.ht[n]
         self.ht[n] = (h, id)
@@ -150,12 +151,15 @@ class Master(da.DistProcess):
     _Master_handler_2._labels = None
     _Master_handler_2._notlabels = None
 
-    def _Master_handler_3(self, n, id, lc, p):
-        self._send((('replyHead', self.ht[n]), (lc, self.id)), p)
+    def _Master_handler_3(self, n, tid, tlc, p):
+        r = random.random()
+        if (r > self.probDrop):
+            self.lc = self.logical_clock()
+            self._send((('replyHead', self.ht[n]), (self.lc, self.id)), p)
     _Master_handler_3._labels = None
     _Master_handler_3._notlabels = None
 
-    def _Master_handler_4(self, p, cn, tid, tlc):
+    def _Master_handler_4(self, cn, tid, tlc, p):
         n = self.ps[cn].index(p)
         if ((n + 1) < 
         len(self.ps[cn])):

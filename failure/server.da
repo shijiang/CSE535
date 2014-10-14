@@ -4,7 +4,7 @@ import random
 import time
 
 class Server(process):
-	def setup(master,chainNum,bank,ps):
+	def setup(master,bankName,bank):
 		self.sentHist = []
 		self.hist = []
 		self.nextP = 0
@@ -14,6 +14,7 @@ class Server(process):
 		self.SN = 0
 		self.isWaitForProcessedTransfer = False
 		self.lc = logical_clock()
+		self.probDrop = 0.2
 		
 	def main():
 		#read config for start up delay
@@ -21,11 +22,11 @@ class Server(process):
 		n = random.randint(0,1)
 		#time.sleep(n)
 				
-		lc=logical_clock()
-		send((('newServer', chainNum), (lc,self.id)), to = master)
+		#lc=logical_clock()
+		#send((('newServer', bankName), (lc,self.id)), to = master)
 		#await(some(received((('addServer',_),(rlc,rid)), from_ = m), has=((rlc,rid)>(lc,self.id))))
 		lc=logical_clock()
-		send((('neighbor', chainNum),(lc,self.id)), to = master)
+		send((('neighbor', bankName),(lc,self.id)), to = master)
 		await(some(received((('replyNeighbor',(prev,next)),(rlc,rid)), from_ = master)))
 		output('sets the neighbor\n')
 		while True:
@@ -35,9 +36,12 @@ class Server(process):
 		lc = logical_clock()
 		send((('reply',),(lc,self.id)), to = m)
 		
-	def recv(msg=(('getBalance',(accountNum,)),(lc, id)), from_ = p):
+	def recv(msg=(('getBalance',(accountNum,)),(tlc, tid)), from_ = p):
 		if isTail:
-			send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,id)), to = p)
+			r = random.random()
+			if (r>probDrop):
+				lc=logical_clock()
+				send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,self.id)), to = p)
 		else:
 			output('im not the tail\n')
 	
@@ -45,12 +49,16 @@ class Server(process):
 		if isHead:
 			SN+=1
 			if ((('deposit',SN),(accountNum,amount)),(tlc,tid)) not in sentHist:
-				send(((('deposit',SN),(accountNum,amount)),(tlc,tid)), to = self.id)
-				sentHist.append(((('deposit',SN),(accountNum,amount)),(tlc,tid)))
-				bank.deposit(accountNum,amount)
+				if ((bank.getBalance(accountNum)+amount)>0):
+					send(((('deposit',SN),(accountNum,amount)),(tlc,tid)), to = self.id)
+					sentHist.append(((('deposit',SN),(accountNum,amount)),(tlc,tid)))
+					bank.deposit(accountNum,amount)
+				else:
+					output('send insuff\n')
+					send((('insuff',(accountNum,amount)),(tlc,tid)), to=nextP)
 			else:
 				send(((('deposit',SN),(accountNum,amount)),(tlc,tid)), to = nextP)
-				
+			
 	def recv(msg=((('deposit',tSN),(accountNum,amount)),(tlc,tid)), from_ = p):
 		if tSN>=self.SN:
 			self.SN = tSN
@@ -66,6 +74,7 @@ class Server(process):
 						lc = logical_clock()
 						send((('ack',((('deposit',tSN),(accountNum,amount)),(tlc,tid))),(lc,self.id)), to = prevP)
 					else:
+						lc = logical_clock()
 						send(((('deposit',tSN),(accountNum,amount)),(tlc,tid)), to = nextP)
 
 				else:
@@ -80,6 +89,14 @@ class Server(process):
 				if isTail:
 					lc=logical_clock()
 					send((('getBalanceRep',(accountNum,bank.getBalance(accountNum))),(lc,self.id)), to = tid)
+		
+	def recv(msg=(('insuff',(accountNum,amount)),(tlc,tid)), from_ = p):
+		if isTail:
+			output('tail send insuff\n')
+			lc = logical_clock()
+			send((('insuff',(accountNum,amount)),(lc,self.id)), to=tid)
+		else:
+			send((('insuff',(accountNum,amount)),(tlc,tid)), to=nextP)
 					
 	def recv(msg=(('ack', m),(tlc,tid)), from_ = p):
 		sentHist.remove(m)
@@ -113,10 +130,8 @@ class Server(process):
 		self.prevP = prev
 		if (self.nextP== self.id):
 			isTail = True;
-			output('im tail\n')
 		if (self.prevP==self.id):
 			isHead=True
-			output('im head\n')	
 		
 #need to process finished message 
 			
