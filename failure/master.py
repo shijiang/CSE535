@@ -16,6 +16,7 @@ PatternExpr_14 = da.pat.FreePattern('np')
 import sys
 import random
 import time
+import logging
 
 
 class Master(da.DistProcess):
@@ -34,7 +35,7 @@ class Master(da.DistProcess):
         da.pat.EventPattern(da.pat.ReceivedEvent, '_MasterReceivedEvent_6', PatternExpr_13, sources=[PatternExpr_14], destinations=None, timestamps=None, record_history=True, handlers=[])])
 
     def main(self):
-        self.output('master starts\n')
+        self.logger.info('master starts\n')
         for k in self.ps.keys():
             for p in self.ps[k]:
                 self.resp[p] = True
@@ -58,23 +59,23 @@ class Master(da.DistProcess):
                                 if ((p == repServ) and (lc > self.lc)):
                                     return True
                         return False
-                    _st_label_31 = 0
+                    _st_label_33 = 0
                     self._timer_start()
-                    while (_st_label_31 == 0):
-                        _st_label_31+=1
+                    while (_st_label_33 == 0):
+                        _st_label_33+=1
                         if ExistentialOpExpr_0():
                             pass
-                            _st_label_31+=1
+                            _st_label_33+=1
                         elif self._timer_expired:
                             self.unresp[p]+=1
-                            _st_label_31+=1
+                            _st_label_33+=1
                         else:
-                            super()._label('_st_label_31', block=True, timeout=self.timer)
-                            _st_label_31-=1
+                            super()._label('_st_label_33', block=True, timeout=self.timer)
+                            _st_label_33-=1
                     else:
-                        if (_st_label_31 != 2):
+                        if (_st_label_33 != 2):
                             continue
-                    if (_st_label_31 != 2):
+                    if (_st_label_33 != 2):
                         break
                     if (self.unresp[p] > 3):
                         self.ps[self.chainNum].remove(p)
@@ -90,6 +91,7 @@ class Master(da.DistProcess):
         self.seenPid = []
         self.chainNum = len(ps.keys())
         self.probDrop = 0.2
+        self.logger = logging.getLogger('')
 
     def tail(self, num):
         n = len(self.ps[num])
@@ -110,21 +112,21 @@ class Master(da.DistProcess):
                     if (rlc > self.lc):
                         return True
             return False
-        _st_label_77 = 0
+        _st_label_79 = 0
         self._timer_start()
-        while (_st_label_77 == 0):
-            _st_label_77+=1
+        while (_st_label_79 == 0):
+            _st_label_79+=1
             if ExistentialOpExpr_1():
                 return rid
-                _st_label_77+=1
+                _st_label_79+=1
             elif self._timer_expired:
-                self.output('pid fail\n')
-                _st_label_77+=1
+                self.logger.info('pid fail\n')
+                _st_label_79+=1
             else:
-                super()._label('_st_label_77', block=True, timeout=3)
-                _st_label_77-=1
+                super()._label('_st_label_79', block=True, timeout=3)
+                _st_label_79-=1
 
-    def _Master_handler_0(self, p, id, lc):
+    def _Master_handler_0(self, id, lc, p):
         if (lc > self.lc):
             self.resp[p] = True
             self.unresp[p] = 0
@@ -136,13 +138,13 @@ class Master(da.DistProcess):
             self.ps[n].append(p)
             self._send((('addServer', p), (lc, id)), 
             self.tail(n))
-            self.output(('new server %s in the ps\n' % id))
+            self.logger.info(('new server %s in the ps\n' % id))
         else:
             pass
     _Master_handler_1._labels = None
     _Master_handler_1._notlabels = None
 
-    def _Master_handler_2(self, n, id, lc, p):
+    def _Master_handler_2(self, n, p, id, lc):
         self.ps[n].append(p)
         (h, t) = self.ht[n]
         self.ht[n] = (h, id)
@@ -159,7 +161,7 @@ class Master(da.DistProcess):
     _Master_handler_3._labels = None
     _Master_handler_3._notlabels = None
 
-    def _Master_handler_4(self, cn, tid, tlc, p):
+    def _Master_handler_4(self, tlc, p, cn, tid):
         n = self.ps[cn].index(p)
         if ((n + 1) < 
         len(self.ps[cn])):
@@ -172,6 +174,6 @@ class Master(da.DistProcess):
             prev = tid
         self.lc = self.logical_clock()
         self._send((('replyNeighbor', (prev, next)), (self.lc, self.id)), p)
-        self.output('reply to Neighbor')
+        self.logger.info('reply to Neighbor')
     _Master_handler_4._labels = None
     _Master_handler_4._notlabels = None

@@ -20,26 +20,25 @@ class Client(da.DistProcess):
         time.sleep(n)
         self.lc = self.logical_clock()
         self._send(('request', (self.lc, self.id)), self.m)
-        print(('client %i\n' % self.lc))
         k = n = s = None
 
         def ExistentialOpExpr_0():
             nonlocal k, n, s
             for (_, (_, _, s), (_ConstantPattern13_, (n, k))) in self._ClientReceivedEvent_0:
                 if (_ConstantPattern13_ == 'reply'):
-                    if (n > self.lc):
+                    if True:
                         return True
             return False
-        _st_label_15 = 0
-        while (_st_label_15 == 0):
-            _st_label_15+=1
+        _st_label_14 = 0
+        while (_st_label_14 == 0):
+            _st_label_14+=1
             if ExistentialOpExpr_0():
                 if (k == self.id):
                     self.output('client done\n')
-                _st_label_15+=1
+                _st_label_14+=1
             else:
-                super()._label('_st_label_15', block=True)
-                _st_label_15-=1
+                super()._label('_st_label_14', block=True)
+                _st_label_14-=1
 
     def setup(self, m):
         self.m = m

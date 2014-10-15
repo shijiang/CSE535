@@ -1,5 +1,6 @@
 #this is the class for bank
 import sys
+import random
 
 class Bank():
 	def __init__(self, accounts):
@@ -16,9 +17,16 @@ class Bank():
 		self.accounts[account] -= amount
 		return self.accounts[account]	
 		
-	def createAcc(self, account, amount):
-		self.accounts[account] = amount
-		
+	def createAcc(self, acc, amount):
+		self.accounts[acc] = amount
+	
+	def validateAcc(self, acc):
+		if acc in self.accounts.keys():
+			return False
+		else:
+			return True
+	
+	#implement later
 	def transfer(accounts):
 		print('transfer')
 	

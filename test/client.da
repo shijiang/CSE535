@@ -13,8 +13,7 @@ class Client(process):
 		time.sleep(n)
 		lc = logical_clock()
 		send(('request',(lc,self.id)), to=m)
-		print('client %i\n'%lc)
-		if await(some(received(('reply',(n,k)), from_ = s), has = (n>self.lc))):
+		if await(some(received(('reply',(n,k)), from_ = s))):
 		   if( k == self.id ):
 		      output("client done\n")
 

@@ -1,0 +1,101 @@
+2014-10-14 21:11:44,487 3832 {<Client('shi-jiangs-mbp', 14295)>, <Client('shi-jiangs-mbp', 24149)>, <Client('shi-jiangs-mbp', 38397)>, <Client('shi-jiangs-mbp', 12317)>, <Client('shi-jiangs-mbp', 30277)>, <Client('shi-jiangs-mbp', 17263)>}
+2014-10-14 21:11:44,489 3832 {'city': [<Server('shi-jiangs-mbp', 23113)>, <Server('shi-jiangs-mbp', 15769)>, <Server('shi-jiangs-mbp', 18599)>], 'boa': [<Server('shi-jiangs-mbp', 29097)>, <Server('shi-jiangs-mbp', 32674)>, <Server('shi-jiangs-mbp', 13380)>], 'chase': [<Server('shi-jiangs-mbp', 26588)>, <Server('shi-jiangs-mbp', 28460)>, <Server('shi-jiangs-mbp', 21091)>, <Server('shi-jiangs-mbp', 33804)>]}
+2014-10-14 21:11:44,492 3832 Terminating...
+2014-10-14 21:11:44,494 3833 master starts
+
+2014-10-14 21:11:48,506 3833 reply to Neighbor
+2014-10-14 21:11:48,510 3833 reply to Neighbor
+2014-10-14 21:11:48,509 3843 sets the neighbor
+
+2014-10-14 21:11:48,512 3839 sets the neighbor
+
+2014-10-14 21:11:48,513 3833 reply to Neighbor
+2014-10-14 21:11:48,515 3833 reply to Neighbor
+2014-10-14 21:11:48,515 3837 sets the neighbor
+
+2014-10-14 21:11:48,518 3833 reply to Neighbor
+2014-10-14 21:11:48,518 3841 sets the neighbor
+
+2014-10-14 21:11:48,520 3834 sets the neighbor
+
+2014-10-14 21:11:48,521 3833 reply to Neighbor
+2014-10-14 21:11:48,524 3835 sets the neighbor
+
+2014-10-14 21:11:48,524 3833 reply to Neighbor
+2014-10-14 21:11:48,529 3833 reply to Neighbor
+2014-10-14 21:11:48,528 3838 sets the neighbor
+
+2014-10-14 21:11:48,531 3842 sets the neighbor
+
+2014-10-14 21:11:48,532 3833 reply to Neighbor
+2014-10-14 21:11:48,534 3836 sets the neighbor
+
+2014-10-14 21:11:48,535 3833 reply to Neighbor
+2014-10-14 21:11:48,537 3840 sets the neighbor
+
+2014-10-14 21:11:49,496 3847 client 101 query the head for boa
+
+2014-10-14 21:11:49,500 3847 client 101 got the head ('shi-jiangs-mbp', 29097)
+
+2014-10-14 21:11:49,502 3847 101 query for balance
+
+2014-10-14 21:11:49,506 3847 101 has amount of 300
+
+2014-10-14 21:11:49,508 3847 101 deposit for amount of -414
+2014-10-14 21:11:49,517 3847 101 withdraw insufficient amount of -414
+
+2014-10-14 21:11:49,518 3847 101 deposit for amount of -158
+2014-10-14 21:11:49,519 3834 head ('shi-jiangs-mbp', 29097) process deposit of -158 with SN 1
+2014-10-14 21:11:49,526 3836 tail ('shi-jiangs-mbp', 13380) process deposit of -158 with SN 1
+2014-10-14 21:11:49,528 3847 101 has new amount is 142
+
+2014-10-14 21:11:49,529 3847 101 transfer
+
+2014-10-14 21:11:49,532 3847 101 deposit for amount of -392
+2014-10-14 21:11:49,541 3847 101 withdraw insufficient amount of -392
+
+2014-10-14 21:11:50,496 3844 client 0 query the head for chase
+
+2014-10-14 21:11:50,496 3849 client 301 query the head for city
+
+2014-10-14 21:11:50,496 3848 client 102 query the head for boa
+
+2014-10-14 21:11:50,502 3848 client 102 got the head ('shi-jiangs-mbp', 29097)
+
+2014-10-14 21:11:50,504 3848 102 query for balance
+
+2014-10-14 21:11:50,508 3848 102 has amount of 400
+
+2014-10-14 21:11:50,510 3848 ***102 deposit for amount of -209 with SN 50
+
+2014-10-14 21:11:50,516 3836 tail ('shi-jiangs-mbp', 13380) process deposit of -209 with SN 50
+2014-10-14 21:11:50,518 3848 ***102 has new amount is 191
+
+2014-10-14 21:11:50,518 3848 102 transfer
+
+2014-10-14 21:11:50,520 3848 ***102 deposit for amount of -67 with SN 50
+
+2014-10-14 21:11:50,521 3834 ('shi-jiangs-mbp', 29097) received duplicate
+
+2014-10-14 21:11:50,523 3848 ***102 has duplicate request with SN 50
+
+2014-10-14 21:11:50,524 3848 102 transfer
+
+2014-10-14 21:11:53,496 3846 client 204 query the head for chase
+
+2014-10-14 21:11:53,496 3845 client 202 query the head for chase
+
+2014-10-14 21:11:55,500 3844 client 0 fail to find head
+ terminate
+
+2014-10-14 21:11:55,500 3849 client 301 fail to find head
+ terminate
+
+2014-10-14 21:11:56,544 3846 client 204 got the head ('shi-jiangs-mbp', 26588)
+
+2014-10-14 21:11:56,547 3846 204 deposit for amount of -252
+2014-10-14 21:11:56,557 3846 204 withdraw insufficient amount of -252
+
+2014-10-14 21:11:58,500 3845 client 202 fail to find head
+ terminate
+

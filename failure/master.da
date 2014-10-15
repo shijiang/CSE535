@@ -2,9 +2,11 @@
 import sys
 import random
 import time
+import logging
 
 
 class  Master(process):
+	#initialize the master
 	def setup(ps):
 		self.resp = {}
 		self.unresp = {}
@@ -14,9 +16,10 @@ class  Master(process):
 		self.seenPid = []
 		self.chainNum = len(ps.keys())
 		self.probDrop = 0.2
+		self.logger= logging.getLogger('')
 	
 	def main():
-		output("master starts\n")
+		logger.info("master starts\n")
 		for k in ps.keys():
 			for p in ps[k]:
 				resp[p] = True
@@ -27,6 +30,7 @@ class  Master(process):
 			t = tail(k)
 			ht[k]=(h,t)
 		
+		#ping all the servers
 		while True:
 			time.sleep(timer)
 			for k in ps.keys():
@@ -41,7 +45,8 @@ class  Master(process):
 						ps[chainNum].remove(p)
 						##send fail server message
 					resp[p]=False
-			
+		
+	#handle ping reply message from servers
 	def recv(msg=(('reply',),(lc,id)), from_=p):
 		if (lc>self.lc):
 			resp[p] = True;
@@ -52,7 +57,7 @@ class  Master(process):
 		if (ps[n].count(p) == 0):
 			ps[n].append(p)
 			send((('addServer',p),(lc,id)), to = tail(n))
-			output('new server %s in the ps\n'%(id))
+			logger.info('new server %s in the ps\n'%(id))
 		else:
 			pass
 	#not used in phase 2
@@ -63,12 +68,14 @@ class  Master(process):
 		resp[id] = True
 		unresp[id] = 0
 	
+	#handle head query message from client
 	def recv(msg=(('head',n),(tlc, tid)), from_ = p):
 		r = random.random()
 		if (r>probDrop):
 			lc=logical_clock()
 			send((('replyHead',ht[n]),(lc,self.id)), to = p)
 	
+	#handle neighbor query message from server
 	def recv(msg=(('neighbor', cn),(tlc,tid)),from_ = p):
 		n = ps[cn].index(p)
 		if (n+1 < len(ps[cn])):
@@ -81,21 +88,23 @@ class  Master(process):
 			prev=tid
 		lc=logical_clock()
 		send((('replyNeighbor',(prev,next)),(lc,self.id)),to = p)
-		output('reply to Neighbor')
+		logger.info('reply to Neighbor')
 	
+	#return tail
 	def tail(num):
 		n = len(ps[num])
 		return ps[num][n-1]
 	
+	#return head
 	def head(num):
 		return ps[num][0]
 	
-			
+	#send pid query to the server	
 	def queryPid(p):
 		lc = logical_clock()
 		send((('pid',),(lc,self.id)), to = p)
 		if await(some(received((('replyPid',),(rlc,rid)), from_ = np), has=(rlc>self.lc))):
 			return rid
 		elif timeout(3):
-			output('pid fail\n')
+			logger.info('pid fail\n')
 

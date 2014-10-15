@@ -40,9 +40,7 @@ class Master(da.DistProcess):
         c = random.randint(0, 50)
         k = p
         lc = self.logical_clock()
-        print(('master%i\n' % lc))
         self._send(('reply', (rlc, rid)), rid)
-        self.output(('receive from %s\n' % rid))
         self.resp[rid] = c
     _Master_handler_0._labels = None
     _Master_handler_0._notlabels = None

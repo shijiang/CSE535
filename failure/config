@@ -35,8 +35,9 @@ servers = 3
 [clients]
 waitingTime = 5
 resending = no
+resendingTime = 4
 number = 6
-acc	= 102 101 301 201 202 204
+acc	= 102 101 301 0 202 204
 chains = boa boa city chase chase chase
 seeds = 1 2 3 4 5 6
 numReq = 4 5 6 3 4 1
@@ -44,5 +45,17 @@ probGetBalance = 0.1 0.1 0.2 0.3 0.4 0.5
 probDeposit = 0.8 0.7 0.8 0.2 0.4 0.5
 probTransfer = 0.1 0.2 0.0 0.5 0.2 0.0
 
+
 [clientsSequence]
-client1 = 
+client1 = 1 2 3 2 3
+client1SN = 0 50 2 50 2
+client2 = 
+client2SN = 
+client3 = 
+client3SN =
+client4 = 
+client4SN = 
+client5 = 
+client5SN =
+client6 = 
+client6SN =

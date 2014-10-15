@@ -20,8 +20,6 @@ class  Master(process):
 		c = random.randint(0,50)
 		k=p
 		lc = logical_clock()
-		print('master%i\n'%lc)
-		send(('reply',(rlc,rid)), to = rid)	
-		output("receive from %s\n"%(rid))
+		send(('reply',(rlc,rid)), to = rid)
 		resp[rid] = c
 

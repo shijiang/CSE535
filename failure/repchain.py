@@ -2,12 +2,19 @@ import da
 import sys
 import random
 import configparser
+import logging
 from master import Master
 from client import Client
 from server import Server
 from bank import Bank
 
 def main():
+    logger = logging.getLogger('')
+    hdlr = logging.FileHandler('logs')
+    formatter = logging.Formatter('%(asctime)s %(process)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
     conf = configparser.ConfigParser()
     conf.read('config')
     da.api.config(channel='fifo', clock='Lamport')
@@ -40,6 +47,12 @@ def main():
             da.api.setup(s, [master, servBank, banks[servBank]])
             ps[servBank].append(s)
     clientNum = int(conf['clients']['number'])
+    waitingTime = int(conf['clients']['waitingTime'])
+    if (conf['clients']['resending'] == 'yes'):
+        resending = True
+    else:
+        resending = False
+    resendingTime = int(conf['clients']['resendingTime'])
     accList = conf['clients']['acc'].split()
     belongsTo = conf['clients']['chains'].split()
     seedList = conf['clients']['seeds'].split()
@@ -47,6 +60,23 @@ def main():
     probGetBalanceList = conf['clients']['probGetBalance'].split()
     probDepositList = conf['clients']['probDeposit'].split()
     probTransferList = conf['clients']['probTransfer'].split()
+    clientsSequence = []
+    clientsSN = []
+    for n in range(1, (clientNum + 1)):
+        prep = ('client' + str(n))
+        s = conf['clientsSequence'][prep].split()
+        t = []
+        for n in s:
+            t.append(
+            int(n))
+        clientsSequence.append(t)
+        prep = (prep + 'SN')
+        s = conf['clientsSequence'][prep].split()
+        t = []
+        for n in s:
+            t.append(
+            int(n))
+        clientsSN.append(t)
     clients = da.api.new(Client, num=clientNum)
     n = 0
     for c in clients:
@@ -56,12 +86,10 @@ def main():
         int(numReqList[n]), (
         float(probGetBalanceList[n]), 
         float(probDepositList[n]), 
-        float(probTransferList[n]))])
+        float(probTransferList[n])), waitingTime, resending, resendingTime, clientsSequence[n], clientsSN[n]])
         n+=1
-    print(clients)
-    print('\n\n')
-    print(ps)
-    print('\n\n')
+    logger.info(clients)
+    logger.info(ps)
     da.api.setup(master, [ps])
     da.api.start(clients)
     da.api.start(servers)

@@ -2,63 +2,164 @@
 import sys
 import random
 import time
+import logging
 
 class Client(process):
-	def setup(m,bankName,accountNum,seed,numReq,probs): 
+	#initialize the client
+	def setup(m,bankName,accountNum,seed,numReq,probs,waitingTime,resending,resendingTime,clientSequence,clientSN): 
 		self.head = 0
 		self.tail = 0
 		self.lc = logical_clock()
 		self.pmax = 5
 		self.nmax = -500
-		self.waitingTime = 10
-		self.retrans = True
+		self.logger= logging.getLogger('')
 	
 	def main():
 		random.seed(seed)
 		n = random.randint(5,10)
 		time.sleep(n)
 		retrans= True
-		while retrans:
+		counter = resendingTime
+		while retrans and (counter>0):
+			retrans = resending
 			lc = logical_clock()
 			send((('head',bankName),(lc,self.id)),to = m)	
-			output('client %i query the head for %s\n'%(accountNum,bankName))	
+			logger.info('client %i query the head for %s\n'%(accountNum,bankName))	
 			if await(some(received((('replyHead',(h,t)),(rlc,id)), from_ = m), has=(rlc>lc))):
 				retrans = False
 			elif timeout(waitingTime):
-				pass
-				
-		while (numReq>0):
-			r = random.random()
-			if (r<probs[0]):			
-				getBalance()
-				if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
-					output('%s has amount of %s\n'%(acc,amount))
-				elif timeout(waitingTime):
-					output('get balance timeout\n')
-			elif (r>probs[0] and r < probs[0]+probs[1]):
-				amount = random.randint(nmax,pmax)					
-				deposit(amount)
-				if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
-					output('%s has new amount is %s\n'%(acc,amount))
-				elif some(received((('insuff',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
-					output('%s withdraw insufficient amount of %s\n'%(acc,amount))
-				elif timeout(waitingTime*10):
-					output('deposit timeout\n')
-			else:
-				output('%s transfer\n'%(accountNum))
-			numReq-=1
+				counter -=1
 		
+		if head==0:
+			logger.info('client %i fail to find head\n terminate\n'%accountNum)
+			return
+			
+		if accountNum == 0:
+			retrans = True
+			counter = resendingTime 
+			while retrans and (counter>0):
+				retrans=resending
+				lc = logical_clock()
+				amount = random.randint(1,pmax)
+				send((('createAcc',amount),(lc,self.id)),to = head)	
+				logger.info('client %i create acc at %s\n'%(accountNum,bankName))	
+				if await(some(received((('createRep',(acc,amount)),(rlc,rid)), from_ = m), has=(rlc>lc))):
+					retrans = False
+				elif timeout(waitingTime):
+					counter-=1
+		if accountNum == 0:
+			logger.info('client %i fail to create acc at %s\n terminate\n'%(accountNum,bankName))
+			return
+			
+		hasSeq = False
+		if (len(clientSequence)==0):
+			hasSeq = False
+		else:
+			hasSeq = True
+		
+		if hasSeq == True:
+			for n in range(0,len(clientSequence)):
+				# 1 means get balance
+				if(clientSequence[n]==1):		
+					if not getBalance():
+						logger.info('%s head failed while deposit\n'%accountNum)
+				elif(clientSequence[n]==2):
+					if not depositWithSN(clientSN[n]):
+						logger.info('%s transfer\n'%(accountNum))
+				else:
+					logger.info('%s transfer\n'%(accountNum))
+		#send random sequence action
+		while (numReq>0 and hasSeq==False):
+			r = random.random()
+			if (r<probs[0]):
+				if not getBalance():
+					logger.info('%s head failed while query for balance\n'%accountNum)
+			elif (r>probs[0] and r < probs[0]+probs[1]):
+				if not deposit():
+					logger.info('%s head failed while deposit\n'%accountNum)
+			else:
+				logger.info('%s transfer\n'%(accountNum))
+			numReq-=1
+	
+	#handle create account reply message
+	def recv(msg=(('createRep',(acc,amount)),(rlc,rid)), from_ = m):
+		accountNum = acc
+		logger.info('client %s created acct with amount %s'%(acc,amount))
+		
+	#handle query head reply message from master	
 	def recv(msg=(('replyHead',(h,t)),(rlc,rid)), from_ = m):
 		head = h
 		tail = t
-		output('client %s got the head %s\n'%(accountNum,head))
+		logger.info('client %s got the head %s\n'%(accountNum,head))
 
+	#send get balance query to the tail
 	def getBalance():
-		lc=logical_clock()
-		send((('getBalance',(accountNum,)),(lc, self.id)), to = tail)
-		
-	def deposit(amount):
-		lc=logical_clock()
-		send((('deposit',(accountNum,amount)),(lc,self.id)), to =head)
-		
+		retrans = True
+		counter = resendingTime
+		while retrans and (counter>0):
+			retrans = resending		
+			lc=logical_clock()
+			send((('getBalance',(accountNum,)),(lc, self.id)), to = tail)
+			logger.info('%s query for balance\n'%(accountNum))
+			if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+				logger.info('%s has amount of %s\n'%(acc,amount))
+				retrans = False
+				return True
+			elif timeout(waitingTime):
+				counter-=1
+				logger.info('%s get balance timeout\n'%accountNum)
+		return False
+	
+	#send deposit to the head
+	def deposit():
+		amount = random.randint(nmax,pmax)
+		retrans = True
+		counter = resendingTime
+		while retrans and (counter>0):	
+			retrans = resending	
+			lc=logical_clock()
+			send((('deposit',(accountNum,amount)),(lc,self.id)), to =head)
+			logger.info('%s deposit for amount of %i'%(accountNum,amount))
+			if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+				logger.info('%s has new amount is %s\n'%(acc,amount))
+				retrans = False
+				return True
+			elif some(received((('insuff',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
+				logger.info('%s withdraw insufficient amount of %s\n'%(acc,amount))
+				retrans = False
+				return True
+			elif timeout(waitingTime*2):
+				counter -=1
+				logger.info('%s deposit timeout\n'%accountNum)
+		return False
+	
+	#deposit with sequence number
+	def depositWithSN(SN):
+		amount = random.randint(nmax,pmax)
+		retrans = True
+		counter = resendingTime
+		while retrans and (counter>0):	
+			retrans = resending	
+			lc=logical_clock()
+			send(((('deposit',SN),(accountNum,amount)),(lc,self.id)), to =head)
+			logger.info('***%s deposit for amount of %i with SN %i\n'%(accountNum,amount,SN))
+			if await(some(received((('getBalanceRep',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc))):
+				logger.info('***%s has new amount is %s\n'%(acc,amount))
+				retrans = False
+				return True
+			elif some(received((('insuff',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
+				logger.info('***%s withdraw insufficient amount of %s\n'%(acc,amount))
+				retrans = False
+				return True
+			elif some(received((('inconsistHist',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
+				retrans = False
+				return True
+			elif some(received((('getBalance',(acc,amount)),(rlc,rid)), from_ = t), has=(rlc>lc)):
+				retrans = False
+				logger.info('***%s has duplicate request with SN %i\n'%(accountNum,SN))
+				return True
+			elif timeout(waitingTime*2):
+				counter -=1
+				logger.info('***%s deposit timeout with SN %i\n'%(accountNum,SN))
+		return False
 		
